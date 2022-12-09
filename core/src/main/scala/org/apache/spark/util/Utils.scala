@@ -829,7 +829,7 @@ private[spark] object Utils extends Logging {
       throw new IOException(s"Failed to create directory ${targetDir.getPath}")
     }
     val dest = new File(targetDir, filename.getOrElse(path.getName))
-    if (fs.isFile(path)) {
+    if (fs.getFileStatus(path).isFile) {
       val in = fs.open(path)
       try {
         downloadFile(path.toString, in, dest, fileOverwrite)
@@ -1368,7 +1368,7 @@ private[spark] object Utils extends Logging {
     }
     val process = builder.start()
     if (redirectStderr) {
-      val threadName = "redirect stderr for command " + command(0)
+      val threadName = "redirect stderr for command " + command.head
       def log(s: String): Unit = logInfo(s)
       processStreamByLine(threadName, process.getErrorStream, log)
     }
@@ -1385,7 +1385,7 @@ private[spark] object Utils extends Logging {
       redirectStderr: Boolean = true): String = {
     val process = executeCommand(command, workingDir, extraEnvironment, redirectStderr)
     val output = new StringBuilder
-    val threadName = "read stdout for " + command(0)
+    val threadName = "read stdout for " + command.head
     def appendToOutput(s: String): Unit = output.append(s).append("\n")
     val stdoutThread = processStreamByLine(threadName, process.getInputStream, appendToOutput)
     val exitCode = process.waitFor()
@@ -2534,7 +2534,7 @@ private[spark] object Utils extends Logging {
       if (uri.getScheme != "spark" ||
         host == null ||
         port < 0 ||
-        (uri.getPath != null && !uri.getPath.isEmpty) || // uri.getPath returns "" instead of null
+        (uri.getPath != null && uri.getPath.nonEmpty) || // uri.getPath returns "" instead of null
         uri.getFragment != null ||
         uri.getQuery != null ||
         uri.getUserInfo != null) {

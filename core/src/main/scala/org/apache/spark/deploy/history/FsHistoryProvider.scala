@@ -317,7 +317,7 @@ private[history] class FsHistoryProvider(conf: SparkConf, clock: Clock)
    * Split a comma separated String, filter out any empty items, and return a Sequence of strings
    */
   private def stringToSeq(list: String): Seq[String] = {
-    list.split(',').map(_.trim).filter(!_.isEmpty)
+    list.split(',').map(_.trim).filter(_.nonEmpty)
   }
 
   override def getAppUI(appId: String, attemptId: Option[String]): Option[LoadedAppUI] = {
@@ -674,7 +674,7 @@ private[history] class FsHistoryProvider(conf: SparkConf, clock: Clock)
     try {
       // If no attempt is specified, or there is no attemptId for attempts, return all attempts
       attemptId
-        .map { id => app.attempts.filter(_.info.attemptId == Some(id)) }
+        .map { id => app.attempts.filter(_.info.attemptId.contains(id)) }
         .getOrElse(app.attempts)
         .foreach { attempt =>
           val reader = EventLogFileReader(fs, new Path(logDir, attempt.logPath),
@@ -848,7 +848,7 @@ private[history] class FsHistoryProvider(conf: SparkConf, clock: Clock)
           try {
             // Fetch the entry first to avoid an RPC when it's already removed.
             listing.read(classOf[LogInfo], inProgressLog)
-            if (!fs.isFile(new Path(inProgressLog))) {
+            if (!fs.getFileStatus(new Path(inProgressLog)).isFile) {
               listing.synchronized {
                 listing.delete(classOf[LogInfo], inProgressLog)
               }
@@ -1197,7 +1197,7 @@ private[history] class FsHistoryProvider(conf: SparkConf, clock: Clock)
       dm: HistoryServerDiskManager,
       appId: String,
       attempt: AttemptInfoWrapper): KVStore = {
-    val metadata = new AppStatusStoreMetadata(AppStatusStore.CURRENT_VERSION)
+    val metadata = AppStatusStoreMetadata(AppStatusStore.CURRENT_VERSION)
 
     // First check if the store already exists and try to open it. If that fails, then get rid of
     // the existing data.
