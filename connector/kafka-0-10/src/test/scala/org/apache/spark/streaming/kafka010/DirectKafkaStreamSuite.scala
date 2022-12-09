@@ -255,9 +255,9 @@ class DirectKafkaStreamSuite
         preferredHosts,
         ConsumerStrategies.Subscribe[String, String](List(topic), kafkaParams.asScala),
         new DefaultPerPartitionConfig(sparkConf))
-      s.consumer.poll(0)
+      s.consumer().poll(java.time.Duration.ZERO)
       assert(
-        s.consumer.position(topicPartition) >= offsetBeforeStart,
+        s.consumer().position(topicPartition) >= offsetBeforeStart,
         "Start offset not from latest"
       )
       s
@@ -311,9 +311,9 @@ class DirectKafkaStreamSuite
           kafkaParams.asScala,
           Map(topicPartition -> 11L)),
         new DefaultPerPartitionConfig(sparkConf))
-      s.consumer.poll(0)
+      s.consumer().poll(java.time.Duration.ZERO)
       assert(
-        s.consumer.position(topicPartition) >= offsetBeforeStart,
+        s.consumer().position(topicPartition) >= offsetBeforeStart,
         "Start offset not from latest"
       )
       s
@@ -473,7 +473,7 @@ class DirectKafkaStreamSuite
     ssc.stop()
     val consumer = new KafkaConsumer[String, String](kafkaParams)
     consumer.subscribe(Arrays.asList(topic))
-    consumer.poll(0)
+    consumer.poll(java.time.Duration.ZERO)
     committed.asScala.foreach {
       case (k, v) =>
         // commits are async, not exactly once

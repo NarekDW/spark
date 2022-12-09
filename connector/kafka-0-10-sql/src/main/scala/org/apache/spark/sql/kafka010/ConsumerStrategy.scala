@@ -63,7 +63,8 @@ private[kafka010] sealed trait ConsumerStrategy extends Logging {
       .build()
 
   protected def retrieveAllPartitions(admin: Admin, topics: Set[String]): Set[TopicPartition] = {
-    admin.describeTopics(topics.asJava).all().get().asScala.filterNot(_._2.isInternal).flatMap {
+    admin.describeTopics(topics.asJava).allTopicNames().get().asScala
+      .filterNot(_._2.isInternal).flatMap {
       case (topic, topicDescription) =>
         topicDescription.partitions().asScala.map { topicPartitionInfo =>
           val partition = topicPartitionInfo.partition()

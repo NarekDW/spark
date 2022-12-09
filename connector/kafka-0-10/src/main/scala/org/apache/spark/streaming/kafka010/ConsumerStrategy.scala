@@ -18,6 +18,7 @@
 package org.apache.spark.streaming.kafka010
 
 import java.{lang => jl, util => ju}
+import java.time.Duration
 import java.util.Locale
 
 import scala.collection.JavaConverters._
@@ -105,9 +106,9 @@ private case class Subscribe[K, V](
       val shouldSuppress =
         aor != null && aor.asInstanceOf[String].toUpperCase(Locale.ROOT) == "NONE"
       try {
-        consumer.poll(0)
+        consumer.poll(Duration.ZERO)
       } catch {
-        case x: NoOffsetForPartitionException if shouldSuppress =>
+        case _: NoOffsetForPartitionException if shouldSuppress =>
           logWarning("Catching NoOffsetForPartitionException since " +
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG + " is none.  See KAFKA-3370")
       }
@@ -159,9 +160,9 @@ private case class SubscribePattern[K, V](
       val shouldSuppress =
         aor != null && aor.asInstanceOf[String].toUpperCase(Locale.ROOT) == "NONE"
       try {
-        consumer.poll(0)
+        consumer.poll(Duration.ZERO)
       } catch {
-        case x: NoOffsetForPartitionException if shouldSuppress =>
+        case _: NoOffsetForPartitionException if shouldSuppress =>
           logWarning("Catching NoOffsetForPartitionException since " +
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG + " is none.  See KAFKA-3370")
       }

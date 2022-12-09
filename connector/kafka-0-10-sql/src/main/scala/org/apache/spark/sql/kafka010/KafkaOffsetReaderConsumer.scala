@@ -18,6 +18,7 @@
 package org.apache.spark.sql.kafka010
 
 import java.{util => ju}
+import java.time.Duration
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
@@ -106,7 +107,7 @@ private[kafka010] class KafkaOffsetReaderConsumer(
    * Whether we should divide Kafka TopicPartitions with a lot of data into smaller Spark tasks.
    */
   private def shouldDivvyUpLargePartitions(numTopicPartitions: Int): Boolean = {
-    minPartitions.map(_ > numTopicPartitions).getOrElse(false)
+    minPartitions.exists(_ > numTopicPartitions)
   }
 
   private def nextGroupId(): String = {
@@ -129,7 +130,7 @@ private[kafka010] class KafkaOffsetReaderConsumer(
     uninterruptibleThreadRunner.runUninterruptibly {
       assert(Thread.currentThread().isInstanceOf[UninterruptibleThread])
       // Poll to get the latest assigned partitions
-      consumer.poll(0)
+      consumer.poll(Duration.ZERO)
       val partitions = consumer.assignment()
       consumer.pause(partitions)
       partitions.asScala.toSet
@@ -150,12 +151,10 @@ private[kafka010] class KafkaOffsetReaderConsumer(
     val partitions = fetchTopicPartitions()
     // Obtain TopicPartition offsets with late binding support
     offsetRangeLimit match {
-      case EarliestOffsetRangeLimit => partitions.map {
-        case tp => tp -> KafkaOffsetRangeLimit.EARLIEST
-      }.toMap
-      case LatestOffsetRangeLimit => partitions.map {
-        case tp => tp -> KafkaOffsetRangeLimit.LATEST
-      }.toMap
+      case EarliestOffsetRangeLimit => partitions.map(
+        tp => tp -> KafkaOffsetRangeLimit.EARLIEST).toMap
+      case LatestOffsetRangeLimit => partitions.map(
+        tp => tp -> KafkaOffsetRangeLimit.LATEST).toMap
       case SpecificOffsetRangeLimit(partitionOffsets) =>
         validateTopicPartitions(partitions, partitionOffsets)
       case SpecificTimestampRangeLimit(partitionTimestamps, strategy) =>
@@ -435,11 +434,8 @@ private[kafka010] class KafkaOffsetReaderConsumer(
 
     // Calculate offset ranges
     val offsetRangesBase = untilPartitionOffsets.keySet.map { tp =>
-      val fromOffset = fromPartitionOffsets.get(tp).getOrElse {
-        // This should not happen since topicPartitions contains all partitions not in
-        // fromPartitionOffsets
-        throw new IllegalStateException(s"$tp doesn't have a from offset")
-      }
+      val fromOffset = fromPartitionOffsets
+        .getOrElse(tp, throw new IllegalStateException(s"$tp doesn't have a from offset"))
       val untilOffset = untilPartitionOffsets(tp)
       KafkaOffsetRange(tp, fromOffset, untilOffset, None)
     }.toSeq
@@ -546,7 +542,7 @@ private[kafka010] class KafkaOffsetReaderConsumer(
 
     withRetriesWithoutInterrupt {
       // Poll to get the latest assigned partitions
-      consumer.poll(0)
+      consumer.poll(Duration.ZERO)
       val partitions = consumer.assignment()
 
       if (!fetchingEarliestOffset) {
