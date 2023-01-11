@@ -108,6 +108,8 @@ trait ExpressionEvalHelper extends ScalaCheckDrivenPropertyChecks with PlanTestB
       exprNullable: Boolean): Boolean = {
     val dataType = UserDefinedType.sqlType(exprDataType)
 
+    println("result: " + result)
+    println("expected: " + expected)
     // The result is null for a non-nullable expression
     assert(result != null || exprNullable, "exprNullable should be true if result is null")
     (result, expected) match {

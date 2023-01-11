@@ -19,6 +19,8 @@ package org.apache.spark.sql.catalyst.util
 
 import java.util.{Map => JavaMap}
 
+import scala.annotation.tailrec
+
 import org.apache.spark.util.collection.Utils
 
 /**
@@ -54,19 +56,21 @@ object ArrayBasedMapData {
       javaMap: JavaMap[K, V],
       keyConverter: (Any) => Any,
       valueConverter: (Any) => Any): ArrayBasedMapData = {
-
-    val keys: Array[Any] = new Array[Any](javaMap.size())
-    val values: Array[Any] = new Array[Any](javaMap.size())
+    val size = javaMap.size()
+    val keys: Array[Any] = new Array[Any](size)
+    val values: Array[Any] = new Array[Any](size)
 
     var i: Int = 0
     val iterator = javaMap.entrySet().iterator()
     while (iterator.hasNext) {
       val entry = iterator.next()
+      println(entry + ": " + entry.hashCode())
+      i = calculateIndex(math.abs(keyConverter(entry).hashCode()) % size)(keys, size)
       keys(i) = keyConverter(entry.getKey)
       values(i) = valueConverter(entry.getValue)
-      i += 1
     }
-    ArrayBasedMapData(keys, values)
+    println(keys(0), keys(1), keys(2))
+    new ArrayBasedMapData(new GenericArrayData(keys), new GenericArrayData(values))
   }
 
   /**
@@ -105,17 +109,27 @@ object ArrayBasedMapData {
       size: Int,
       keyConverter: (Any) => Any,
       valueConverter: (Any) => Any): ArrayBasedMapData = {
-
     val keys: Array[Any] = new Array[Any](size)
     val values: Array[Any] = new Array[Any](size)
 
     var i = 0
     for ((key, value) <- iterator) {
+      i = calculateIndex(math.abs(keyConverter(key).hashCode()) % size)(keys, size)
       keys(i) = keyConverter(key)
       values(i) = valueConverter(value)
-      i += 1
     }
-    ArrayBasedMapData(keys, values)
+
+
+    new ArrayBasedMapData(new GenericArrayData(keys), new GenericArrayData(values))
+  }
+
+  @tailrec
+  def calculateIndex(i: Int)(implicit keys: Array[Any], size: Int): Int = {
+    if (keys(i) == null) {
+      i
+    } else {
+      calculateIndex((i + 1) % size)
+    }
   }
 
   /**
@@ -125,7 +139,8 @@ object ArrayBasedMapData {
    * elements, otherwise the behavior is undefined.
    */
   def apply(keys: Array[_], values: Array[_]): ArrayBasedMapData = {
-    new ArrayBasedMapData(new GenericArrayData(keys), new GenericArrayData(values))
+    val iterator = keys.zip(values).toMap.iterator
+    this(iterator, iterator.size, identity, identity)
   }
 
   def toScalaMap(map: ArrayBasedMapData): Map[Any, Any] = {

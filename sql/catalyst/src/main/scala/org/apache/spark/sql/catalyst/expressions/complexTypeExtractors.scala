@@ -366,21 +366,11 @@ trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes {
     val length = map.numElements()
     val keys = map.keyArray()
     val values = map.valueArray()
-
-    var i = 0
-    var found = false
-    while (i < length && !found) {
-      if (ordering.equiv(keys.get(i, keyType), ordinal)) {
-        found = true
-      } else {
-        i += 1
-      }
-    }
-
-    if (!found || values.isNullAt(i)) {
-      null
-    } else {
+    val i = ordinal.hashCode() % length
+    if (ordering.equiv(keys.get(i, keyType), ordinal)) {
       values.get(i, dataType)
+    } else {
+      null
     }
   }
 

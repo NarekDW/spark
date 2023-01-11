@@ -18,8 +18,7 @@
 package org.apache.spark.sql.catalyst.util
 
 import scala.collection.mutable
-
-import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.{CatalystTypeConverters, InternalRow}
 import org.apache.spark.sql.errors.QueryExecutionErrors
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
@@ -56,20 +55,23 @@ class ArrayBasedMapBuilder(keyType: DataType, valueType: DataType) extends Seria
       throw QueryExecutionErrors.nullAsMapKeyNotAllowedError()
     }
 
-    val index = keyToIndex.getOrDefault(key, -1)
+    val convertedKey = CatalystTypeConverters.convertToCatalyst(key)
+    val convertedValue = CatalystTypeConverters.convertToCatalyst(value)
+
+    val index = keyToIndex.getOrDefault(convertedKey, -1)
     if (index == -1) {
       if (size >= ByteArrayMethods.MAX_ROUNDED_ARRAY_LENGTH) {
         throw QueryExecutionErrors.exceedMapSizeLimitError(size)
       }
-      keyToIndex.put(key, values.length)
-      keys.append(key)
-      values.append(value)
+      keyToIndex.put(convertedKey, values.length)
+      keys.append(convertedKey)
+      values.append(convertedValue)
     } else {
       if (mapKeyDedupPolicy == SQLConf.MapKeyDedupPolicy.EXCEPTION.toString) {
         throw QueryExecutionErrors.duplicateMapKeyFoundError(key)
       } else if (mapKeyDedupPolicy == SQLConf.MapKeyDedupPolicy.LAST_WIN.toString) {
         // Overwrite the previous value, as the policy is last wins.
-        values(index) = value
+        values(index) = convertedValue
       } else {
         throw new IllegalStateException("Unknown map key dedup policy: " + mapKeyDedupPolicy)
       }
@@ -107,8 +109,7 @@ class ArrayBasedMapBuilder(keyType: DataType, valueType: DataType) extends Seria
    * builder becomes fresh afterward and is ready to take input and build another map.
    */
   def build(): ArrayBasedMapData = {
-    val map = new ArrayBasedMapData(
-      new GenericArrayData(keys.toArray), new GenericArrayData(values.toArray))
+    val map = ArrayBasedMapData(keys.toArray, values.toArray)
     reset()
     map
   }
