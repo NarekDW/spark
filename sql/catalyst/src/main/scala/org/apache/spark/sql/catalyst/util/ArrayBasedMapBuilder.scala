@@ -18,6 +18,7 @@
 package org.apache.spark.sql.catalyst.util
 
 import scala.collection.mutable
+
 import org.apache.spark.sql.catalyst.{CatalystTypeConverters, InternalRow}
 import org.apache.spark.sql.errors.QueryExecutionErrors
 import org.apache.spark.sql.internal.SQLConf
