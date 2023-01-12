@@ -49,6 +49,6 @@ public final class ColumnarMap extends MapData {
 
   @Override
   public MapData copy() {
-    return new ArrayBasedMapData(keys.copy(), values.copy());
+    return new ArrayBasedMapData(keys.copy(), values.copy(), null);
   }
 }

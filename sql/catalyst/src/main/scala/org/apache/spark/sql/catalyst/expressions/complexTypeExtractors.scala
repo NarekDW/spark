@@ -364,14 +364,20 @@ trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes {
       ordering: Ordering[Any]): Any = {
     val map = value.asInstanceOf[MapData]
     val length = map.numElements()
+    val keyHash = map.keyHash()
+    val keyHashLength = keyHash.numElements()
     val keys = map.keyArray()
     val values = map.valueArray()
-    val i = ordinal.hashCode() % length
-    if (ordering.equiv(keys.get(i, keyType), ordinal)) {
-      values.get(i, dataType)
-    } else {
-      null
+
+    var i = ordinal.hashCode() % keyHashLength
+    while(keyHash.getInt(i) != -1) {
+      if (ordering.equiv(keys.get(keyHash.getInt(i), keyType), ordinal)) {
+        return values.get(i, dataType)
+      }
+      i = (i + 1) % keyHashLength
     }
+
+    null
   }
 
   def doGetValueGenCode(

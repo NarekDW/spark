@@ -28,6 +28,8 @@ abstract class MapData extends Serializable {
 
   def numElements(): Int
 
+  def keyHash(): ArrayData = new GenericArrayData(Seq.empty)
+
   def keyArray(): ArrayData
 
   def valueArray(): ArrayData

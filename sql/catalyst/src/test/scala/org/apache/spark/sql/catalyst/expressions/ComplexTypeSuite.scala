@@ -497,94 +497,94 @@ class ComplexTypeSuite extends SparkFunSuite with ExpressionEvalHelper {
   }
 
   test("StringToMap") {
-//    val expectedDataType = MapType(StringType, StringType, valueContainsNull = true)
-//    assert(new StringToMap("").dataType === expectedDataType)
+    val expectedDataType = MapType(StringType, StringType, valueContainsNull = true)
+    assert(new StringToMap("").dataType === expectedDataType)
 
-//    val s0 = Literal("a:1,b:2,c:3")
-//    val m0 = Map("a" -> "1", "b" -> "2", "c" -> "3")
-//    print(m0)
-//    checkEvaluation(new StringToMap(s0), m0)
+    val s0 = Literal("a:1,b:2,c:3")
+    val m0 = Map("a" -> "1", "b" -> "2", "c" -> "3")
+    print(m0)
+    checkEvaluation(new StringToMap(s0), m0)
 
-//    val s1 = Literal("a: ,b:2")
-//    val m1 = Map("a" -> " ", "b" -> "2")
-//    checkEvaluation(new StringToMap(s1), m1)
-//
-//    val s2 = Literal("a=1,b=2,c=3")
-//    val m2 = Map("a" -> "1", "b" -> "2", "c" -> "3")
-//    checkEvaluation(StringToMap(s2, Literal(","), Literal("=")), m2)
+    val s1 = Literal("a: ,b:2")
+    val m1 = Map("a" -> " ", "b" -> "2")
+    checkEvaluation(new StringToMap(s1), m1)
+
+    val s2 = Literal("a=1,b=2,c=3")
+    val m2 = Map("a" -> "1", "b" -> "2", "c" -> "3")
+    checkEvaluation(StringToMap(s2, Literal(","), Literal("=")), m2)
 
     val s3 = Literal("")
     val m3 = Map[String, String]("" -> null)
     checkEvaluation(StringToMap(s3, Literal(","), Literal("=")), m3)
 
-//    val s4 = Literal("a:1_b:2_c:3")
-//    val m4 = Map("a" -> "1", "b" -> "2", "c" -> "3")
-//    checkEvaluation(new StringToMap(s4, Literal("_")), m4)
-//
-//    val s5 = Literal("a")
-//    val m5 = Map("a" -> null)
-//    checkEvaluation(new StringToMap(s5), m5)
-//
-//    val s6 = Literal("a=1&b=2&c=3")
-//    val m6 = Map("a" -> "1", "b" -> "2", "c" -> "3")
-//    checkEvaluation(StringToMap(s6, NonFoldableLiteral("&"), NonFoldableLiteral("=")), m6)
+    val s4 = Literal("a:1_b:2_c:3")
+    val m4 = Map("a" -> "1", "b" -> "2", "c" -> "3")
+    checkEvaluation(new StringToMap(s4, Literal("_")), m4)
 
-//    checkExceptionInExpression[RuntimeException](
-//      new StringToMap(Literal("a:1,b:2,a:3")), "Duplicate map key")
-//    withSQLConf(SQLConf.MAP_KEY_DEDUP_POLICY.key -> SQLConf.MapKeyDedupPolicy.LAST_WIN.toString) {
-//      // Duplicated map keys will be removed w.r.t. the last wins policy.
-//      checkEvaluation(
-//        new StringToMap(Literal("a:1,b:2,a:3")),
-//        create_map("a" -> "3", "b" -> "2"))
-//    }
-//
-//    // arguments checking
-//    assert(new StringToMap(Literal("a:1,b:2,c:3")).checkInputDataTypes().isSuccess)
-//    assert(new StringToMap(Literal(null)).checkInputDataTypes() ==
-//      DataTypeMismatch(
-//        errorSubClass = "UNEXPECTED_INPUT_TYPE",
-//        messageParameters = Map(
-//          "paramIndex" -> "1",
-//          "requiredType" -> "\"STRING\"",
-//          "inputSql" -> "\"NULL\"",
-//          "inputType" -> "\"VOID\""
-//        )
-//      )
-//    )
-//    assert(new StringToMap(Literal("a:1,b:2,c:3"), Literal(null)).checkInputDataTypes() ==
-//      DataTypeMismatch(
-//        errorSubClass = "UNEXPECTED_INPUT_TYPE",
-//        messageParameters = Map(
-//          "paramIndex" -> "2",
-//          "requiredType" -> "\"STRING\"",
-//          "inputSql" -> "\"NULL\"",
-//          "inputType" -> "\"VOID\""
-//        )
-//      )
-//    )
-//    assert(StringToMap(Literal("a:1,b:2,c:3"), Literal(null),
-//      Literal(null)).checkInputDataTypes() ==
-//      DataTypeMismatch(
-//        errorSubClass = "UNEXPECTED_INPUT_TYPE",
-//        messageParameters = Map(
-//          "paramIndex" -> "2",
-//          "requiredType" -> "\"STRING\"",
-//          "inputSql" -> "\"NULL\"",
-//          "inputType" -> "\"VOID\""
-//        )
-//      )
-//    )
-//    assert(new StringToMap(Literal(null), Literal(null)).checkInputDataTypes() ==
-//      DataTypeMismatch(
-//        errorSubClass = "UNEXPECTED_INPUT_TYPE",
-//        messageParameters = Map(
-//          "paramIndex" -> "1",
-//          "requiredType" -> "\"STRING\"",
-//          "inputSql" -> "\"NULL\"",
-//          "inputType" -> "\"VOID\""
-//        )
-//      )
-//    )
+    val s5 = Literal("a")
+    val m5 = Map("a" -> null)
+    checkEvaluation(new StringToMap(s5), m5)
+
+    val s6 = Literal("a=1&b=2&c=3")
+    val m6 = Map("a" -> "1", "b" -> "2", "c" -> "3")
+    checkEvaluation(StringToMap(s6, NonFoldableLiteral("&"), NonFoldableLiteral("=")), m6)
+
+    checkExceptionInExpression[RuntimeException](
+      new StringToMap(Literal("a:1,b:2,a:3")), "Duplicate map key")
+    withSQLConf(SQLConf.MAP_KEY_DEDUP_POLICY.key -> SQLConf.MapKeyDedupPolicy.LAST_WIN.toString) {
+      // Duplicated map keys will be removed w.r.t. the last wins policy.
+      checkEvaluation(
+        new StringToMap(Literal("a:1,b:2,a:3")),
+        create_map("a" -> "3", "b" -> "2"))
+    }
+
+    // arguments checking
+    assert(new StringToMap(Literal("a:1,b:2,c:3")).checkInputDataTypes().isSuccess)
+    assert(new StringToMap(Literal(null)).checkInputDataTypes() ==
+      DataTypeMismatch(
+        errorSubClass = "UNEXPECTED_INPUT_TYPE",
+        messageParameters = Map(
+          "paramIndex" -> "1",
+          "requiredType" -> "\"STRING\"",
+          "inputSql" -> "\"NULL\"",
+          "inputType" -> "\"VOID\""
+        )
+      )
+    )
+    assert(new StringToMap(Literal("a:1,b:2,c:3"), Literal(null)).checkInputDataTypes() ==
+      DataTypeMismatch(
+        errorSubClass = "UNEXPECTED_INPUT_TYPE",
+        messageParameters = Map(
+          "paramIndex" -> "2",
+          "requiredType" -> "\"STRING\"",
+          "inputSql" -> "\"NULL\"",
+          "inputType" -> "\"VOID\""
+        )
+      )
+    )
+    assert(StringToMap(Literal("a:1,b:2,c:3"), Literal(null),
+      Literal(null)).checkInputDataTypes() ==
+      DataTypeMismatch(
+        errorSubClass = "UNEXPECTED_INPUT_TYPE",
+        messageParameters = Map(
+          "paramIndex" -> "2",
+          "requiredType" -> "\"STRING\"",
+          "inputSql" -> "\"NULL\"",
+          "inputType" -> "\"VOID\""
+        )
+      )
+    )
+    assert(new StringToMap(Literal(null), Literal(null)).checkInputDataTypes() ==
+      DataTypeMismatch(
+        errorSubClass = "UNEXPECTED_INPUT_TYPE",
+        messageParameters = Map(
+          "paramIndex" -> "1",
+          "requiredType" -> "\"STRING\"",
+          "inputSql" -> "\"NULL\"",
+          "inputType" -> "\"VOID\""
+        )
+      )
+    )
   }
 
   test("SPARK-22693: CreateNamedStruct should not use global variables") {

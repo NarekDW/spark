@@ -29,12 +29,16 @@ import org.apache.spark.util.collection.Utils
  * Note that, user is responsible to guarantee that the key array does not have duplicated
  * elements, otherwise the behavior is undefined.
  */
-class ArrayBasedMapData(val keyArray: ArrayData, val valueArray: ArrayData) extends MapData {
+class ArrayBasedMapData(val keyArray: ArrayData,
+                        val valueArray: ArrayData,
+                        override val keyHash: ArrayData = new GenericArrayData(Array.empty)
+                       ) extends MapData {
   require(keyArray.numElements() == valueArray.numElements())
 
   override def numElements(): Int = keyArray.numElements()
 
-  override def copy(): MapData = new ArrayBasedMapData(keyArray.copy(), valueArray.copy())
+  override def copy(): MapData =
+    new ArrayBasedMapData(keyArray.copy(), valueArray.copy(), keyHash.copy())
 
   override def toString: String = {
     s"keys: $keyArray, values: $valueArray"
@@ -57,6 +61,7 @@ object ArrayBasedMapData {
       keyConverter: (Any) => Any,
       valueConverter: (Any) => Any): ArrayBasedMapData = {
     val size = javaMap.size()
+    val keysHash: Array[Int] = Array.fill(2 * size)(-1)
     val keys: Array[Any] = new Array[Any](size)
     val values: Array[Any] = new Array[Any](size)
 
@@ -64,13 +69,18 @@ object ArrayBasedMapData {
     val iterator = javaMap.entrySet().iterator()
     while (iterator.hasNext) {
       val entry = iterator.next()
-      println(entry + ": " + entry.hashCode())
-      i = calculateIndex(math.abs(keyConverter(entry).hashCode()) % size)(keys, size)
+      val convertedKey = keyConverter(entry)
       keys(i) = keyConverter(entry.getKey)
       values(i) = valueConverter(entry.getValue)
+      val index = calculateIndex(math.abs(convertedKey.hashCode()) % 2*size)(keysHash, 2*size)
+      keysHash(index) = i
+      i += 1
     }
-    println(keys(0), keys(1), keys(2))
-    new ArrayBasedMapData(new GenericArrayData(keys), new GenericArrayData(values))
+
+    new ArrayBasedMapData(
+      new GenericArrayData(keys),
+      new GenericArrayData(values),
+      new GenericArrayData(keysHash))
   }
 
   /**
@@ -109,23 +119,29 @@ object ArrayBasedMapData {
       size: Int,
       keyConverter: (Any) => Any,
       valueConverter: (Any) => Any): ArrayBasedMapData = {
+    val keysHash: Array[Int] = Array.fill(2 * size)(-1)
     val keys: Array[Any] = new Array[Any](size)
     val values: Array[Any] = new Array[Any](size)
 
     var i = 0
     for ((key, value) <- iterator) {
-      i = calculateIndex(math.abs(keyConverter(key).hashCode()) % size)(keys, size)
       keys(i) = keyConverter(key)
       values(i) = valueConverter(value)
+
+      val index = calculateIndex(math.abs(keyConverter(key).hashCode()) % 2*size)(keysHash, 2*size)
+      keysHash(index) = i
+      i += 1
     }
 
-
-    new ArrayBasedMapData(new GenericArrayData(keys), new GenericArrayData(values))
+    new ArrayBasedMapData(
+      new GenericArrayData(keys),
+      new GenericArrayData(values),
+      new GenericArrayData(keysHash))
   }
 
   @tailrec
-  def calculateIndex(i: Int)(implicit keys: Array[Any], size: Int): Int = {
-    if (keys(i) == null) {
+  def calculateIndex(i: Int)(implicit keys: Array[Int], size: Int): Int = {
+    if (keys(i) == -1) {
       i
     } else {
       calculateIndex((i + 1) % size)
@@ -139,8 +155,8 @@ object ArrayBasedMapData {
    * elements, otherwise the behavior is undefined.
    */
   def apply(keys: Array[_], values: Array[_]): ArrayBasedMapData = {
-    val iterator = keys.zip(values).toMap.iterator
-    this(iterator, iterator.size, identity, identity)
+    val iterator = keys.zip(values).iterator
+    this(iterator, keys.length, identity, identity)
   }
 
   def toScalaMap(map: ArrayBasedMapData): Map[Any, Any] = {
