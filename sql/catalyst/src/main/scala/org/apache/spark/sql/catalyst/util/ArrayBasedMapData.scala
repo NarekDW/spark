@@ -29,17 +29,22 @@ import org.apache.spark.util.collection.Utils
  * Note that, user is responsible to guarantee that the key array does not have duplicated
  * elements, otherwise the behavior is undefined.
  */
-class ArrayBasedMapData(
-    val keyArray: ArrayData,
-    val valueArray: ArrayData,
-    override val keyHash: ArrayData = new GenericArrayData(Array.empty))
-    extends MapData {
+class ArrayBasedMapData(val keyArray: ArrayData, val valueArray: ArrayData) extends MapData {
   require(keyArray.numElements() == valueArray.numElements())
+
+  var keyHash: ArrayData = _
+  private def this(keyArray: ArrayData, valueArray: ArrayData, kh: ArrayData) {
+    this(keyArray, valueArray)
+    this.keyHash = kh
+  }
 
   override def numElements(): Int = keyArray.numElements()
 
-  override def copy(): MapData =
+  override def copy(): MapData = if (keyHash == null) {
+    new ArrayBasedMapData(keyArray.copy(), valueArray.copy())
+  } else {
     new ArrayBasedMapData(keyArray.copy(), valueArray.copy(), keyHash.copy())
+  }
 
   override def toString: String = {
     s"keys: $keyArray, values: $valueArray"
