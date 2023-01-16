@@ -33,7 +33,7 @@ class ArrayBasedMapData(val keyArray: ArrayData, val valueArray: ArrayData) exte
   require(keyArray.numElements() == valueArray.numElements())
 
   var keyHash: ArrayData = _
-  private def this(keyArray: ArrayData, valueArray: ArrayData, kh: ArrayData) {
+  private def this(keyArray: ArrayData, valueArray: ArrayData, kh: ArrayData) = {
     this(keyArray, valueArray)
     this.keyHash = kh
   }
