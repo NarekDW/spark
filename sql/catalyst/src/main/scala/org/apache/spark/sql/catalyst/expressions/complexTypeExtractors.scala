@@ -378,7 +378,8 @@ trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes {
 
   // todo: current search is O(n), improve it.
   def getValueEval(value: Any, ordinal: Any, keyType: DataType, ordering: Ordering[Any]): Any = {
-    if (value.isInstanceOf[ArrayBasedMapData]) {
+    if (value.isInstanceOf[ArrayBasedMapData] &&
+      value.asInstanceOf[ArrayBasedMapData].keysHash != null) {
       val map = value.asInstanceOf[ArrayBasedMapData]
       if (map.isEmpty) {
         return null
