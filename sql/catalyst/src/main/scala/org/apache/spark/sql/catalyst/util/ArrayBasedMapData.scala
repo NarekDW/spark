@@ -79,10 +79,10 @@ object ArrayBasedMapData {
     val iterator = javaMap.entrySet().iterator()
     while (iterator.hasNext) {
       val entry = iterator.next()
-      val convertedKey = keyConverter(entry)
-      keys(i) = keyConverter(entry.getKey)
+      val keyConverted = keyConverter(entry.getKey)
+      keys(i) = keyConverted
       values(i) = valueConverter(entry.getValue)
-      val keyHash = math.abs(simplePositiveHashCode(convertedKey))
+      val keyHash = math.abs(simplePositiveHashCode(keyConverted))
       val index = calculateIndex(keyHash % keyHashSize)(keysHash, keyHashSize)
       keysHash(index) = i
       i += 1
