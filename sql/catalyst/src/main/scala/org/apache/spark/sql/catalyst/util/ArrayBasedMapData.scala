@@ -82,7 +82,7 @@ object ArrayBasedMapData {
       val convertedKey = keyConverter(entry)
       keys(i) = keyConverter(entry.getKey)
       values(i) = valueConverter(entry.getValue)
-      val keyHash = math.abs(simpleHashCode(convertedKey))
+      val keyHash = math.abs(simplePositiveHashCode(convertedKey))
       val index = calculateIndex(keyHash % keyHashSize)(keysHash, keyHashSize)
       keysHash(index) = i
       i += 1
@@ -147,7 +147,7 @@ object ArrayBasedMapData {
       values(i) = valueConverter(value)
 
       val keyConverted = keyConverter(key)
-      val keyHash = math.abs(simpleHashCode(keyConverted))
+      val keyHash = math.abs(simplePositiveHashCode(keyConverted))
       val index = calculateIndex(keyHash % keyHashSize)(keysHash, keyHashSize)
       keysHash(index) = i
       i += 1

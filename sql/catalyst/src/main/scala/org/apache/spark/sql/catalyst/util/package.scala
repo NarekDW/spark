@@ -221,8 +221,16 @@ package object util extends Logging {
     )
   }
 
-  def simpleHashCode(any: Any): Int = any match {
-    case array: Array[_] => array.toSeq.hashCode()
-    case other => other.hashCode()
+  def simplePositiveHashCode(any: Any): Int = {
+    val hashCode = any match {
+      case array: Array[_] => array.toSeq.hashCode()
+      case other => other.hashCode()
+    }
+
+    if (hashCode == Int.MinValue) {
+      hashCode - 1
+    } else {
+      hashCode
+    }
   }
 }

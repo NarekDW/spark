@@ -22,7 +22,7 @@ import org.apache.spark.sql.catalyst.analysis._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator, ExprCode}
 import org.apache.spark.sql.catalyst.trees.SQLQueryContext
 import org.apache.spark.sql.catalyst.trees.TreePattern.{EXTRACT_VALUE, TreePattern}
-import org.apache.spark.sql.catalyst.util.{quoteIdentifier, simpleHashCode, ArrayBasedMapData, ArrayData, GenericArrayData, TypeUtils}
+import org.apache.spark.sql.catalyst.util.{quoteIdentifier, simplePositiveHashCode, ArrayBasedMapData, ArrayData, GenericArrayData, TypeUtils}
 import org.apache.spark.sql.errors.{QueryCompilationErrors, QueryExecutionErrors}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
@@ -388,7 +388,7 @@ trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes {
     val keys = map.keyArray
     val values = map.valueArray
 
-    val keyHash = math.abs(simpleHashCode(ordinal))
+    val keyHash = math.abs(simplePositiveHashCode(ordinal))
 //    println("Search: " + ordinal + " : " + keyHash)
     var i = keyHash % keyHashLength
     while (keysHash.getInt(i) != -1) {
