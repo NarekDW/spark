@@ -22,7 +22,7 @@ import org.apache.spark.sql.catalyst.analysis._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator, ExprCode}
 import org.apache.spark.sql.catalyst.trees.SQLQueryContext
 import org.apache.spark.sql.catalyst.trees.TreePattern.{EXTRACT_VALUE, TreePattern}
-import org.apache.spark.sql.catalyst.util.{quoteIdentifier, simplePositiveHashCode, ArrayBasedMapData, ArrayData, GenericArrayData, TypeUtils}
+import org.apache.spark.sql.catalyst.util.{quoteIdentifier, simplePositiveHashCode, ArrayBasedMapData, ArrayData, GenericArrayData, MapData, TypeUtils}
 import org.apache.spark.sql.errors.{QueryCompilationErrors, QueryExecutionErrors}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
@@ -378,28 +378,51 @@ trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes {
 
   // todo: current search is O(n), improve it.
   def getValueEval(value: Any, ordinal: Any, keyType: DataType, ordering: Ordering[Any]): Any = {
-    val map = value.asInstanceOf[ArrayBasedMapData]
-    if (map.isEmpty) {
-      return null
-    }
-
-    val keysHash = map.keysHash
-    val keyHashLength = keysHash.numElements()
-    val keys = map.keyArray
-    val values = map.valueArray
-
-    val keyHash = math.abs(simplePositiveHashCode(ordinal))
-//    println("Search: " + ordinal + " : " + keyHash)
-    var i = keyHash % keyHashLength
-    while (keysHash.getInt(i) != -1) {
-      val index = keysHash.getInt(i)
-      if (ordering.equiv(keys.get(index, keyType), ordinal)) {
-        return values.get(index, dataType)
+    if (value.isInstanceOf[ArrayBasedMapData]) {
+      val map = value.asInstanceOf[ArrayBasedMapData]
+      if (map.isEmpty) {
+        return null
       }
-      i = (i + 1) % keyHashLength
-    }
 
-    null
+      val keysHash = map.keysHash
+      val keyHashLength = keysHash.numElements()
+      val keys = map.keyArray
+      val values = map.valueArray
+
+      val keyHash = math.abs(simplePositiveHashCode(ordinal))
+      //    println("Search: " + ordinal + " : " + keyHash)
+      var i = keyHash % keyHashLength
+      while (keysHash.getInt(i) != -1) {
+        val index = keysHash.getInt(i)
+        if (ordering.equiv(keys.get(index, keyType), ordinal)) {
+          return values.get(index, dataType)
+        }
+        i = (i + 1) % keyHashLength
+      }
+
+      null
+    } else {
+      val map = value.asInstanceOf[MapData]
+      val length = map.numElements()
+      val keys = map.keyArray()
+      val values = map.valueArray()
+
+      var i = 0
+      var found = false
+      while (i < length && !found) {
+        if (ordering.equiv(keys.get(i, keyType), ordinal)) {
+          found = true
+        } else {
+          i += 1
+        }
+      }
+
+      if (!found || values.isNullAt(i)) {
+        null
+      } else {
+        values.get(i, dataType)
+      }
+    }
   }
 
   def doGetValueGenCode(ctx: CodegenContext, ev: ExprCode, mapType: MapType): ExprCode = {
