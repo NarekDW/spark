@@ -220,4 +220,9 @@ package object util extends Logging {
         .build()
     )
   }
+
+  def simpleHashCode(any: Any): Int = any match {
+    case array: Array[_] => array.toSeq.hashCode()
+    case other => other.hashCode()
+  }
 }

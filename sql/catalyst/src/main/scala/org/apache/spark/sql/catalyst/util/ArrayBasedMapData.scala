@@ -32,18 +32,18 @@ import org.apache.spark.util.collection.Utils
 class ArrayBasedMapData(val keyArray: ArrayData, val valueArray: ArrayData) extends MapData {
   require(keyArray.numElements() == valueArray.numElements())
 
-  var keyHash: ArrayData = _
+  var keysHash: ArrayData = _
   private def this(keyArray: ArrayData, valueArray: ArrayData, kh: ArrayData) = {
     this(keyArray, valueArray)
-    this.keyHash = kh
+    this.keysHash = kh
   }
 
   override def numElements(): Int = keyArray.numElements()
 
-  override def copy(): MapData = if (keyHash == null) {
+  override def copy(): MapData = if (keysHash == null) {
     new ArrayBasedMapData(keyArray.copy(), valueArray.copy())
   } else {
-    new ArrayBasedMapData(keyArray.copy(), valueArray.copy(), keyHash.copy())
+    new ArrayBasedMapData(keyArray.copy(), valueArray.copy(), keysHash.copy())
   }
 
   override def toString: String = {
@@ -70,7 +70,8 @@ object ArrayBasedMapData {
       keyConverter: (Any) => Any,
       valueConverter: (Any) => Any): ArrayBasedMapData = {
     val size = javaMap.size()
-    val keysHash: Array[Int] = Array.fill(2 * size)(-1)
+    val keyHashSize = 2 * size
+    val keysHash: Array[Int] = Array.fill(keyHashSize)(-1)
     val keys: Array[Any] = new Array[Any](size)
     val values: Array[Any] = new Array[Any](size)
 
@@ -81,7 +82,8 @@ object ArrayBasedMapData {
       val convertedKey = keyConverter(entry)
       keys(i) = keyConverter(entry.getKey)
       values(i) = valueConverter(entry.getValue)
-      val index = calculateIndex(math.abs(convertedKey.hashCode()) % 2 * size)(keysHash, 2 * size)
+      val keyHash = math.abs(simpleHashCode(convertedKey))
+      val index = calculateIndex(keyHash % keyHashSize)(keysHash, keyHashSize)
       keysHash(index) = i
       i += 1
     }
@@ -134,7 +136,8 @@ object ArrayBasedMapData {
       size: Int,
       keyConverter: (Any) => Any,
       valueConverter: (Any) => Any): ArrayBasedMapData = {
-    val keysHash: Array[Int] = Array.fill(2 * size)(-1)
+    val keyHashSize = 2 * size
+    val keysHash: Array[Int] = Array.fill(keyHashSize)(-1)
     val keys: Array[Any] = new Array[Any](size)
     val values: Array[Any] = new Array[Any](size)
 
@@ -143,8 +146,9 @@ object ArrayBasedMapData {
       keys(i) = keyConverter(key)
       values(i) = valueConverter(value)
 
-      val index =
-        calculateIndex(math.abs(keyConverter(key).hashCode()) % 2 * size)(keysHash, 2 * size)
+      val keyConverted = keyConverter(key)
+      val keyHash = math.abs(simpleHashCode(keyConverted))
+      val index = calculateIndex(keyHash % keyHashSize)(keysHash, keyHashSize)
       keysHash(index) = i
       i += 1
     }

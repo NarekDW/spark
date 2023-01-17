@@ -22,7 +22,7 @@ import org.apache.spark.sql.catalyst.analysis._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator, ExprCode}
 import org.apache.spark.sql.catalyst.trees.SQLQueryContext
 import org.apache.spark.sql.catalyst.trees.TreePattern.{EXTRACT_VALUE, TreePattern}
-import org.apache.spark.sql.catalyst.util.{quoteIdentifier, ArrayBasedMapData, ArrayData, GenericArrayData, TypeUtils}
+import org.apache.spark.sql.catalyst.util.{quoteIdentifier, simpleHashCode, ArrayBasedMapData, ArrayData, GenericArrayData, TypeUtils}
 import org.apache.spark.sql.errors.{QueryCompilationErrors, QueryExecutionErrors}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
@@ -379,16 +379,22 @@ trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes {
   // todo: current search is O(n), improve it.
   def getValueEval(value: Any, ordinal: Any, keyType: DataType, ordering: Ordering[Any]): Any = {
     val map = value.asInstanceOf[ArrayBasedMapData]
-    val length = map.numElements()
-    val keyHash = map.keyHash
-    val keyHashLength = keyHash.numElements()
+    if (map.isEmpty) {
+      return null
+    }
+
+    val keysHash = map.keysHash
+    val keyHashLength = keysHash.numElements()
     val keys = map.keyArray
     val values = map.valueArray
 
-    var i = ordinal.hashCode() % keyHashLength
-    while (keyHash.getInt(i) != -1) {
-      if (ordering.equiv(keys.get(keyHash.getInt(i), keyType), ordinal)) {
-        return values.get(i, dataType)
+    val keyHash = math.abs(simpleHashCode(ordinal))
+//    println("Search: " + ordinal + " : " + keyHash)
+    var i = keyHash % keyHashLength
+    while (keysHash.getInt(i) != -1) {
+      val index = keysHash.getInt(i)
+      if (ordering.equiv(keys.get(index, keyType), ordinal)) {
+        return values.get(index, dataType)
       }
       i = (i + 1) % keyHashLength
     }
