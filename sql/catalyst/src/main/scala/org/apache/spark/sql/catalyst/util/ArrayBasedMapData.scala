@@ -175,6 +175,12 @@ object ArrayBasedMapData {
    * elements, otherwise the behavior is undefined.
    */
   def apply(keys: Array[_], values: Array[_]): ArrayBasedMapData = {
+    if (keys.length != values.length) {
+      return new ArrayBasedMapData(
+        new GenericArrayData(keys),
+        new GenericArrayData(values))
+    }
+
     val iterator = keys.zip(values).iterator
     this(iterator, keys.length, identity, identity)
   }
