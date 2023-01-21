@@ -171,4 +171,12 @@ class ComplexTypesSuite extends QueryTest with SharedSparkSession {
     assert(df.schema == expectedSchema)
     checkAnswer(df, Seq(Row(Row(1, 2))))
   }
+
+  test("INTERVAL TEST") {
+    val df = spark.sql("select '2022-02-01'- interval 16 year")
+    df.show()
+
+    val df1 = spark.sql("select '2022-02-01'- interval 60 days")
+    df1.show()
+  }
 }
