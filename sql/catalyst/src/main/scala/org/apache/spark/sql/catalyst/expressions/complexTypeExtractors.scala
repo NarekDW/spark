@@ -402,7 +402,21 @@ trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes with 
     if (conf.mapStoreOptimization) {
       find(hashIndex(ordinal, length))(index => keys.isNullAt(index))
     } else {
-      find(0)(index => index >= length)
+      var i = 0
+      var found = false
+      while (i < length && !found) {
+        if (ordering.equiv(keys.get(i, keyType), ordinal)) {
+          found = true
+        } else {
+          i += 1
+        }
+      }
+
+      if (!found || values.isNullAt(i)) {
+        null
+      } else {
+        values.get(i, dataType)
+      }
     }
   }
 
