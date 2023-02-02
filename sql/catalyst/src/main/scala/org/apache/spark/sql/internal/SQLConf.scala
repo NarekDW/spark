@@ -2270,6 +2270,13 @@ object SQLConf {
       .booleanConf
       .createWithDefault(true)
 
+  val MAP_STORE_OPTIMIZATION =
+    buildConf("spark.sql.optimizer.mapStoreOptimization")
+      .doc("optimize map store")
+      .version("3.2.0")
+      .booleanConf
+      .createWithDefault(false)
+
   val COLLAPSE_PROJECT_ALWAYS_INLINE = buildConf("spark.sql.optimizer.collapseProjectAlwaysInline")
     .doc("Whether to always collapse two adjacent projections and inline expressions even if " +
       "it causes extra duplication.")
@@ -4622,6 +4629,8 @@ class SQLConf extends Serializable with Logging {
   def jsonExpressionOptimization: Boolean = getConf(SQLConf.JSON_EXPRESSION_OPTIMIZATION)
 
   def csvExpressionOptimization: Boolean = getConf(SQLConf.CSV_EXPRESSION_OPTIMIZATION)
+
+  def mapStoreOptimization: Boolean = getConf(SQLConf.MAP_STORE_OPTIMIZATION)
 
   def parallelFileListingInStatsComputation: Boolean =
     getConf(SQLConf.PARALLEL_FILE_LISTING_IN_STATS_COMPUTATION)

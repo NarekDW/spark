@@ -17,12 +17,14 @@
 
 package org.apache.spark.sql.catalyst.expressions
 
-import org.apache.spark.sql.catalyst.InternalRow
+import scala.annotation.tailrec
+
+import org.apache.spark.sql.catalyst.{InternalRow, SQLConfHelper}
 import org.apache.spark.sql.catalyst.analysis._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator, ExprCode}
 import org.apache.spark.sql.catalyst.trees.SQLQueryContext
 import org.apache.spark.sql.catalyst.trees.TreePattern.{EXTRACT_VALUE, TreePattern}
-import org.apache.spark.sql.catalyst.util.{quoteIdentifier, simplePositiveHashCode, ArrayBasedMapData, ArrayData, GenericArrayData, MapData, TypeUtils}
+import org.apache.spark.sql.catalyst.util.{hashIndex, quoteIdentifier, ArrayData, GenericArrayData, MapData, TypeUtils}
 import org.apache.spark.sql.errors.{QueryCompilationErrors, QueryExecutionErrors}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
@@ -374,55 +376,33 @@ trait GetArrayItemUtil {
 /**
  * Common trait for [[GetMapValue]] and [[ElementAt]].
  */
-trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes {
+trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes with SQLConfHelper {
 
   // todo: current search is O(n), improve it.
   def getValueEval(value: Any, ordinal: Any, keyType: DataType, ordering: Ordering[Any]): Any = {
-    if (value.isInstanceOf[ArrayBasedMapData] &&
-      value.asInstanceOf[ArrayBasedMapData].keysHash != null) {
-      val map = value.asInstanceOf[ArrayBasedMapData]
-      if (map.isEmpty) {
+    val map = value.asInstanceOf[MapData]
+    val length = map.numElements()
+    val keys = map.keyArray()
+    val values = map.valueArray()
+
+    @tailrec
+    def find(index: Int)(implicit predicate: Int => Boolean): Any = {
+      if (predicate(index)) {
         return null
       }
 
-      val keysHash = map.keysHash
-      val keyHashLength = keysHash.numElements()
-      val keys = map.keyArray
-      val values = map.valueArray
-
-      val keyHash = math.abs(simplePositiveHashCode(ordinal))
-      //    println("Search: " + ordinal + " : " + keyHash)
-      var i = keyHash % keyHashLength
-      while (keysHash.getInt(i) != -1) {
-        val index = keysHash.getInt(i)
-        if (ordering.equiv(keys.get(index, keyType), ordinal)) {
-          return values.get(index, dataType)
-        }
-        i = (i + 1) % keyHashLength
-      }
-
-      null
-    } else {
-      val map = value.asInstanceOf[MapData]
-      val length = map.numElements()
-      val keys = map.keyArray()
-      val values = map.valueArray()
-
-      var i = 0
-      var found = false
-      while (i < length && !found) {
-        if (ordering.equiv(keys.get(i, keyType), ordinal)) {
-          found = true
-        } else {
-          i += 1
-        }
-      }
-
-      if (!found || values.isNullAt(i)) {
-        null
+      val key = keys.get(index, keyType)
+      if (ordering.equiv(key, ordinal)) {
+        values.get(index, dataType)
       } else {
-        values.get(i, dataType)
+        find((index + 1) % length)
       }
+    }
+
+    if (conf.mapStoreOptimization) {
+      find(hashIndex(ordinal, length))(index => keys.isNullAt(index))
+    } else {
+      find(0)(index => index >= length)
     }
   }
 

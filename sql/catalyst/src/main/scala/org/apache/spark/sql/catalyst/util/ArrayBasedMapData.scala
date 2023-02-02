@@ -21,6 +21,7 @@ import java.util.{Map => JavaMap}
 
 import scala.annotation.tailrec
 
+import org.apache.spark.sql.catalyst.SQLConfHelper
 import org.apache.spark.util.collection.Utils
 
 /**
@@ -32,26 +33,16 @@ import org.apache.spark.util.collection.Utils
 class ArrayBasedMapData(val keyArray: ArrayData, val valueArray: ArrayData) extends MapData {
   require(keyArray.numElements() == valueArray.numElements())
 
-  var keysHash: ArrayData = _
-  private def this(keyArray: ArrayData, valueArray: ArrayData, kh: ArrayData) = {
-    this(keyArray, valueArray)
-    this.keysHash = kh
-  }
-
   override def numElements(): Int = keyArray.numElements()
 
-  override def copy(): MapData = if (keysHash == null) {
-    new ArrayBasedMapData(keyArray.copy(), valueArray.copy())
-  } else {
-    new ArrayBasedMapData(keyArray.copy(), valueArray.copy(), keysHash.copy())
-  }
+  override def copy(): MapData = new ArrayBasedMapData(keyArray.copy(), valueArray.copy())
 
   override def toString: String = {
     s"keys: $keyArray, values: $valueArray"
   }
 }
 
-object ArrayBasedMapData {
+object ArrayBasedMapData extends SQLConfHelper {
 
   /**
    * Creates a [[ArrayBasedMapData]] by applying the given converters over each (key -> value)
@@ -65,33 +56,51 @@ object ArrayBasedMapData {
    *   This function is applied over all the values of the input map to obtain the output map's
    *   values
    */
-  def apply[K, V](
-      javaMap: JavaMap[K, V],
-      keyConverter: (Any) => Any,
-      valueConverter: (Any) => Any): ArrayBasedMapData = {
-    val size = javaMap.size()
-    val keyHashSize = 2 * size
-    val keysHash: Array[Int] = Array.fill(keyHashSize)(-1)
+  def apply[K, V](javaMap: JavaMap[K, V],
+                  keyConverter: Any => Any,
+                  valueConverter: Any => Any): ArrayBasedMapData = {
+    val javaMapSize = javaMap.size()
+    val size = if (conf.mapStoreOptimization) 2 * javaMapSize else javaMapSize
     val keys: Array[Any] = new Array[Any](size)
     val values: Array[Any] = new Array[Any](size)
-
-    var i: Int = 0
     val iterator = javaMap.entrySet().iterator()
-    while (iterator.hasNext) {
-      val entry = iterator.next()
-      val keyConverted = keyConverter(entry.getKey)
-      keys(i) = keyConverted
-      values(i) = valueConverter(entry.getValue)
-      val keyHash = math.abs(simplePositiveHashCode(keyConverted))
-      val index = calculateIndex(keyHash % keyHashSize)(keysHash, keyHashSize)
-      keysHash(index) = i
-      i += 1
+
+    if (conf.mapStoreOptimization) {
+      while (iterator.hasNext) {
+        val entry = iterator.next()
+        val keyConverted = keyConverter(entry.getKey)
+        val index = hashIndex(keyConverted, size)
+        val i = findIndex(index, keys)
+
+        keys(i) = keyConverted
+        values(i) = valueConverter(entry.getValue)
+      }
+    } else {
+      var i: Int = 0
+      while (iterator.hasNext) {
+        val entry = iterator.next()
+        keys(i) = keyConverter(entry.getKey)
+        values(i) = valueConverter(entry.getValue)
+        i += 1
+      }
     }
 
-    new ArrayBasedMapData(
-      new GenericArrayData(keys),
-      new GenericArrayData(values),
-      new GenericArrayData(keysHash))
+    new ArrayBasedMapData(new GenericArrayData(keys), new GenericArrayData(values))
+  }
+
+  private def findIndex(index: Int, array: Array[Any]): Int = {
+    val length = array.length
+
+    @tailrec
+    def findIndexHelper(i: Int): Int = {
+      if (array(i) == null) {
+        i
+      } else {
+        findIndexHelper((i + 1) % length)
+      }
+    }
+
+    findIndexHelper(index)
   }
 
   /**
@@ -131,32 +140,31 @@ object ArrayBasedMapData {
    *   This function is applied over all the values extracted from the given iterator to obtain
    *   the output map's values
    */
-  def apply(
-      iterator: Iterator[(_, _)],
-      size: Int,
-      keyConverter: (Any) => Any,
-      valueConverter: (Any) => Any): ArrayBasedMapData = {
-    val keyHashSize = 2 * size
-    val keysHash: Array[Int] = Array.fill(keyHashSize)(-1)
+  def apply(iterator: Iterator[(_, _)],
+            size: Int,
+            keyConverter: Any => Any,
+            valueConverter: Any => Any): ArrayBasedMapData = {
     val keys: Array[Any] = new Array[Any](size)
     val values: Array[Any] = new Array[Any](size)
 
-    var i = 0
-    for ((key, value) <- iterator) {
-      keys(i) = keyConverter(key)
-      values(i) = valueConverter(value)
-
-      val keyConverted = keyConverter(key)
-      val keyHash = math.abs(simplePositiveHashCode(keyConverted))
-      val index = calculateIndex(keyHash % keyHashSize)(keysHash, keyHashSize)
-      keysHash(index) = i
-      i += 1
+    if (conf.mapStoreOptimization) {
+      for ((key, value) <- iterator) {
+        val keyConverted = keyConverter(key)
+        val index = hashIndex(keyConverted, size)
+        val i = findIndex(index, keys)
+        keys(i) = keyConverted
+        values(i) = valueConverter(value)
+      }
+    } else {
+      var i: Int = 0
+      for ((key, value) <- iterator) {
+        keys(i) = keyConverter(key)
+        values(i) = valueConverter(value)
+        i += 1
+      }
     }
 
-    new ArrayBasedMapData(
-      new GenericArrayData(keys),
-      new GenericArrayData(values),
-      new GenericArrayData(keysHash))
+    new ArrayBasedMapData(new GenericArrayData(keys), new GenericArrayData(values))
   }
 
   @tailrec
