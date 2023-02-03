@@ -2293,7 +2293,7 @@ object SQLConf {
       .doc("optimize map store")
       .version("3.2.0")
       .booleanConf
-      .createWithDefault(true)
+      .createWithDefault(false)
 
   val COLLAPSE_PROJECT_ALWAYS_INLINE = buildConf("spark.sql.optimizer.collapseProjectAlwaysInline")
     .doc("Whether to always collapse two adjacent projections and inline expressions even if " +

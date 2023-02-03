@@ -24,7 +24,7 @@ import org.apache.spark.sql.catalyst.analysis._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator, ExprCode}
 import org.apache.spark.sql.catalyst.trees.SQLQueryContext
 import org.apache.spark.sql.catalyst.trees.TreePattern.{EXTRACT_VALUE, TreePattern}
-import org.apache.spark.sql.catalyst.util.{hashIndex, quoteIdentifier, ArrayData, GenericArrayData, MapData, TypeUtils}
+import org.apache.spark.sql.catalyst.util.{hashIndex, quoteIdentifier, ArrayBasedMapData, ArrayData, GenericArrayData, TypeUtils}
 import org.apache.spark.sql.errors.{QueryCompilationErrors, QueryExecutionErrors}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
@@ -380,10 +380,12 @@ trait GetMapValueUtil extends BinaryExpression with ImplicitCastInputTypes with 
 
   // todo: current search is O(n), improve it.
   def getValueEval(value: Any, ordinal: Any, keyType: DataType, ordering: Ordering[Any]): Any = {
-    val map = value.asInstanceOf[MapData]
+//    val map = value.asInstanceOf[MapData]
+
+    val map = value.asInstanceOf[ArrayBasedMapData]
     val length = map.numElements()
-    val keys = map.keyArray()
-    val values = map.valueArray()
+    val keys = map.keyArray
+    val values = map.valueArray
 
     @tailrec
     def find(index: Int)(implicit predicate: Int => Boolean): Any = {
