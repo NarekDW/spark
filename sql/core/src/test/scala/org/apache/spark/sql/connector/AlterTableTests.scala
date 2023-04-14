@@ -163,7 +163,7 @@ trait AlterTableTests extends SharedSparkSession with QueryErrorsBase {
       checkError(
         exception = e1,
         errorClass = "FIELD_NOT_FOUND",
-        parameters = Map("fieldName" -> "`c`", "fields" -> "a, point, b")
+        parameters = Map("fieldName" -> "`non_exist`", "fields" -> "a, point, b")
       )
 
       sql(s"ALTER TABLE $t ADD COLUMN point.y int FIRST")
@@ -188,7 +188,7 @@ trait AlterTableTests extends SharedSparkSession with QueryErrorsBase {
       checkError(
         exception = e2,
         errorClass = "FIELD_NOT_FOUND",
-        parameters = Map("fieldName" -> "`x2`", "fields" -> "y, x, z")
+        parameters = Map("fieldName" -> "`non_exist`", "fields" -> "y, x, z")
       )
     }
   }
@@ -229,7 +229,7 @@ trait AlterTableTests extends SharedSparkSession with QueryErrorsBase {
       checkError(
         exception = e,
         errorClass = "FIELD_NOT_FOUND",
-        parameters = Map("fieldName" -> "`yy`", "fields" -> "a, x, y, z, b, point")
+        parameters = Map("fieldName" -> "`xx`", "fields" -> "a, x, y, z, b, point")
       )
     }
   }

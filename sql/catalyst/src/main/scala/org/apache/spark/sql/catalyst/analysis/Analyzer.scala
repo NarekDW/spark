@@ -3707,7 +3707,7 @@ class Analyzer(override val catalogManager: CatalogManager) extends RuleExecutor
                     ResolvedFieldPosition(ColumnPosition.after(colName))
                   case None =>
                     throw QueryCompilationErrors.referenceColNotFoundForAlterTableChangesError(
-                      col.colName, allFields)
+                      after.column(), allFields)
                 }
               case _ => ResolvedFieldPosition(u.position)
             }
