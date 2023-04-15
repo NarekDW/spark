@@ -146,10 +146,11 @@ class StatisticsCollectionSuite extends StatisticsCollectionTestBase with Shared
         exception = intercept[AnalysisException] {
           sql(s"ANALYZE TABLE $tableName COMPUTE STATISTICS FOR COLUMNS some_random_column")
         },
-        errorClass = "COLUMN_NOT_FOUND",
+        errorClass = "COLUMN_OR_FIELD_NOT_FOUND",
         parameters = Map(
-          "colName" -> "`some_random_column`",
-          "caseSensitiveConfig" -> "\"spark.sql.caseSensitive\""
+          "name" -> "`some_random_column`",
+          "tableName" -> "`spark_catalog`.`default`.`column_stats_test1`",
+          "list" -> "`data`, `nestedData`"
         )
       )
     }

@@ -129,7 +129,7 @@ class ParquetFileMetadataStructRowIndexSuite extends QueryTest with SharedSparkS
         exception = intercept[AnalysisException] {
           df.select("*", s"${FileFormat.METADATA_NAME}.${ROW_INDEX}")
         },
-        errorClass = "FIELD_NOT_FOUND",
+        errorClass = "STRUCT_FIELD_NOT_FOUND",
         parameters = Map(
           "fieldName" -> "`row_index`",
           "fields" -> ("`file_path`, `file_name`, `file_size`, " +

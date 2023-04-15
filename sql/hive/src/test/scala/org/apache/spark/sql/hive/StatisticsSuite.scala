@@ -590,10 +590,11 @@ class StatisticsSuite extends StatisticsCollectionTestBase with TestHiveSingleto
         exception = intercept[AnalysisException] {
           sql(s"ANALYZE TABLE $tableName COMPUTE STATISTICS FOR COLUMNS fakeColumn")
         },
-        errorClass = "COLUMN_NOT_FOUND",
+        errorClass = "COLUMN_OR_FIELD_NOT_FOUND",
         parameters = Map(
-          "colName" -> "`fakeColumn`",
-          "caseSensitiveConfig" -> "\"spark.sql.caseSensitive\""
+          "name" -> "`fakeColumn`",
+          "tableName" -> s"`spark_catalog`.`default`.`${tableName.toLowerCase(Locale.ROOT)}`",
+          "list" -> "`key`, `value`, `ds`"
         )
       )
     }

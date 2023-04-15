@@ -174,8 +174,11 @@ class V2CommandsCaseSensitivitySuite
         withSQLConf(SQLConf.CASE_SENSITIVE.key -> caseSensitive.toString) {
           assertAnalysisErrorClass(
             inputPlan = alter,
-            expectedErrorClass = "FIELD_NOT_FOUND",
-            expectedMessageParameters = Map("fieldName" -> "`f`", "fields" -> "id, data, point")
+            expectedErrorClass = "COLUMN_OR_FIELD_NOT_FOUND",
+            expectedMessageParameters = Map(
+              "name" -> s"`$ref`",
+              "tableName" -> "`table_name`",
+              "list" -> "`id`, `data`, `point`")
           )
         }
       }
@@ -205,8 +208,11 @@ class V2CommandsCaseSensitivitySuite
       withSQLConf(SQLConf.CASE_SENSITIVE.key -> caseSensitive.toString) {
         assertAnalysisErrorClass(
           inputPlan = alter,
-          expectedErrorClass = "FIELD_NOT_FOUND",
-          expectedMessageParameters = Map("fieldName" -> "`y`", "fields" -> "id, data, point, x")
+          expectedErrorClass = "COLUMN_OR_FIELD_NOT_FOUND",
+          expectedMessageParameters = Map(
+            "name" -> "`X`",
+            "tableName" -> "`table_name`",
+            "list" -> "`id`, `data`, `point`, `x`")
         )
       }
     }
@@ -228,8 +234,11 @@ class V2CommandsCaseSensitivitySuite
         withSQLConf(SQLConf.CASE_SENSITIVE.key -> caseSensitive.toString) {
           assertAnalysisErrorClass(
             inputPlan = alter,
-            expectedErrorClass = "FIELD_NOT_FOUND",
-            expectedMessageParameters = Map("fieldName" -> "`z`", "fields" -> "x, y")
+            expectedErrorClass = "COLUMN_OR_FIELD_NOT_FOUND",
+            expectedMessageParameters = Map(
+              "name" -> s"`$ref`",
+              "tableName" -> "`table_name`",
+              "list" -> "`x`, `y`")
           )
         }
       }
@@ -259,8 +268,11 @@ class V2CommandsCaseSensitivitySuite
       withSQLConf(SQLConf.CASE_SENSITIVE.key -> caseSensitive.toString) {
         assertAnalysisErrorClass(
           inputPlan = alter,
-          expectedErrorClass = "FIELD_NOT_FOUND",
-          expectedMessageParameters = Map("fieldName" -> "`zz`", "fields" -> "x, y, z")
+          expectedErrorClass = "COLUMN_OR_FIELD_NOT_FOUND",
+          expectedMessageParameters = Map(
+            "name" -> "`Z`",
+            "tableName" -> "`table_name`",
+            "list" -> "`x`, `y`, `z`")
         )
       }
     }

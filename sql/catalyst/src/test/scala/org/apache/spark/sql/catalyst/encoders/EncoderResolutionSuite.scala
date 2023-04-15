@@ -132,7 +132,7 @@ class EncoderResolutionSuite extends PlanTest {
     val attrs = Seq($"arr".array(new StructType().add("c", "int")))
     checkError(
       exception = intercept[AnalysisException](encoder.resolveAndBind(attrs)),
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`a`", "fields" -> "`c`"))
   }
 
@@ -152,7 +152,7 @@ class EncoderResolutionSuite extends PlanTest {
         .add("arr", ArrayType(new StructType().add("c", "int")))))
       checkError(
         exception = intercept[AnalysisException](encoder.resolveAndBind(attrs)),
-        errorClass = "FIELD_NOT_FOUND",
+        errorClass = "STRUCT_FIELD_NOT_FOUND",
         parameters = Map("fieldName" -> "`a`", "fields" -> "`c`"))
     }
   }

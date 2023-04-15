@@ -773,7 +773,8 @@ case class DescribeColumnCommand(
     val colName = UnresolvedAttribute(colNameParts).name
     val field = {
       relation.resolve(colNameParts, resolver).getOrElse {
-        throw QueryCompilationErrors.columnNotFoundError(colName)
+        throw QueryCompilationErrors.columnOrFieldNotFoundError(
+          colName, relation.output.map(_.name).toArray, table.unquotedString)
       }
     }
     if (!field.isInstanceOf[Attribute]) {

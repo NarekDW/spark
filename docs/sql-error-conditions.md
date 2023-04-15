@@ -195,7 +195,7 @@ Fail to insert a value of `<sourceType>` type into the `<targetType>` type colum
 
 The column `<columnName>` already exists. Consider to choose another name or rename the existing column.
 
-### COLUMN_NOT_FOUND
+### COLUMN_OR_FIELD_NOT_FOUND
 
 [SQLSTATE: 42703](sql-error-conditions-sqlstates.html#class-42-syntax-error-or-access-rule-violation)
 
@@ -318,10 +318,6 @@ Failed preparing of the function `<funcName>` for call. Please, double check fun
 [SQLSTATE: 42K04](sql-error-conditions-sqlstates.html#class-42-syntax-error-or-access-rule-violation)
 
 Failed to rename `<sourcePath>` to `<targetPath>` as destination already exists.
-
-### FIELD_NOT_FOUND
-
-[SQLSTATE: 42704](sql-error-conditions-sqlstates.html#class-42-syntax-error-or-access-rule-violation)
 
 No such struct field `<fieldName>` in `<fields>`.
 

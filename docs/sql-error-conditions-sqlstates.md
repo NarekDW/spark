@@ -326,7 +326,7 @@ Spark SQL uses the following `SQLSTATE` classes:
 </tr>
 <tr>
   <td></td>
-  <td><a href="sql-error-conditions.html#column_not_found">COLUMN_NOT_FOUND</a>, <a href="unresolved-column-error-class.md">UNRESOLVED_COLUMN</a>, <a href="unresolved-field-error-class.md">UNRESOLVED_FIELD</a>, <a href="unresolved-map-key-error-class.md">UNRESOLVED_MAP_KEY</a>, <a href="sql-error-conditions.html#unresolved_using_column_for_join">UNRESOLVED_USING_COLUMN_FOR_JOIN</a>
+  <td><a href="sql-error-conditions.html#column_or_field_not_found">COLUMN_OR_FIELD_NOT_FOUND</a>, <a href="unresolved-column-error-class.md">UNRESOLVED_COLUMN</a>, <a href="unresolved-field-error-class.md">UNRESOLVED_FIELD</a>, <a href="unresolved-map-key-error-class.md">UNRESOLVED_MAP_KEY</a>, <a href="sql-error-conditions.html#unresolved_using_column_for_join">UNRESOLVED_USING_COLUMN_FOR_JOIN</a>
   </td>
 </tr>
     <tr>
@@ -335,7 +335,7 @@ Spark SQL uses the following `SQLSTATE` classes:
 </tr>
 <tr>
   <td></td>
-  <td><a href="sql-error-conditions.html#ambiguous_reference">AMBIGUOUS_REFERENCE</a>, <a href="sql-error-conditions.html#default_database_not_exists">DEFAULT_DATABASE_NOT_EXISTS</a>, <a href="sql-error-conditions.html#field_not_found">FIELD_NOT_FOUND</a>, <a href="sql-error-conditions.html#index_not_found">INDEX_NOT_FOUND</a>, <a href="sql-error-conditions.html#schema_not_found">SCHEMA_NOT_FOUND</a>, <a href="sql-error-conditions.html#unrecognized_sql_type">UNRECOGNIZED_SQL_TYPE</a>
+  <td><a href="sql-error-conditions.html#ambiguous_reference">AMBIGUOUS_REFERENCE</a>, <a href="sql-error-conditions.html#default_database_not_exists">DEFAULT_DATABASE_NOT_EXISTS</a>, <a href="sql-error-conditions.html#index_not_found">INDEX_NOT_FOUND</a>, <a href="sql-error-conditions.html#schema_not_found">SCHEMA_NOT_FOUND</a>, <a href="sql-error-conditions.html#unrecognized_sql_type">UNRECOGNIZED_SQL_TYPE</a>
   </td>
 </tr>
     <tr>

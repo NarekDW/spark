@@ -240,7 +240,7 @@ class FileMetadataStructSuite extends QueryTest with SharedSparkSession {
       exception = intercept[AnalysisException] {
         df.select("name", METADATA_FILE_NAME).collect()
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`file_name`", "fields" -> "`id`, `university`"))
   }
 
@@ -518,14 +518,14 @@ class FileMetadataStructSuite extends QueryTest with SharedSparkSession {
             exception = intercept[AnalysisException] {
               df.select("name", "_metadata.file_name").collect()
             },
-            errorClass = "FIELD_NOT_FOUND",
+            errorClass = "STRUCT_FIELD_NOT_FOUND",
             parameters = Map("fieldName" -> "`file_name`", "fields" -> "`id`, `university`"))
 
           checkError(
             exception = intercept[AnalysisException] {
               df.select("name", "_METADATA.file_NAME").collect()
             },
-            errorClass = "FIELD_NOT_FOUND",
+            errorClass = "STRUCT_FIELD_NOT_FOUND",
             parameters = Map("fieldName" -> "`file_NAME`", "fields" -> "`id`, `university`"))
         }
       }

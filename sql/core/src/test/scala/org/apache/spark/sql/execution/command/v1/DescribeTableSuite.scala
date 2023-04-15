@@ -21,6 +21,7 @@ import java.util.Locale
 
 import org.apache.spark.sql.{AnalysisException, QueryTest, Row}
 import org.apache.spark.sql.connector.catalog.CatalogManager.SESSION_CATALOG_NAME
+import org.apache.spark.sql.errors.QueryErrorsBase
 import org.apache.spark.sql.execution.command
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types.StringType
@@ -35,7 +36,8 @@ import org.apache.spark.sql.types.StringType
  *     `org.apache.spark.sql.hive.execution.command.DescribeTableSuite`
  */
 trait DescribeTableSuiteBase extends command.DescribeTableSuiteBase
-  with command.TestsV1AndV2Commands {
+  with command.TestsV1AndV2Commands
+  with QueryErrorsBase {
 
   def getProvider(): String = defaultUsing.stripPrefix("USING").trim.toLowerCase(Locale.ROOT)
 
@@ -63,10 +65,11 @@ trait DescribeTableSuiteBase extends command.DescribeTableSuiteBase
         exception = intercept[AnalysisException] {
           sql(s"DESC $tbl key1").collect()
         },
-        errorClass = "COLUMN_NOT_FOUND",
+        errorClass = "COLUMN_OR_FIELD_NOT_FOUND",
         parameters = Map(
-          "colName" -> "`key1`",
-          "caseSensitiveConfig" -> "\"spark.sql.caseSensitive\""
+          "name" -> "`key1`",
+          "tableName" -> toSQLId(tbl),
+          "list" -> "`key`, `col`"
         )
       )
     }
@@ -89,10 +92,11 @@ trait DescribeTableSuiteBase extends command.DescribeTableSuiteBase
           exception = intercept[AnalysisException] {
             sql(s"DESC $tbl KEY").collect()
           },
-          errorClass = "COLUMN_NOT_FOUND",
+          errorClass = "COLUMN_OR_FIELD_NOT_FOUND",
           parameters = Map(
-            "colName" -> "`KEY`",
-            "caseSensitiveConfig" -> "\"spark.sql.caseSensitive\""
+            "name" -> "`KEY`",
+            "tableName" -> toSQLId(tbl),
+            "list" -> "`key`"
           )
         )
       }

@@ -162,8 +162,11 @@ trait AlterTableTests extends SharedSparkSession with QueryErrorsBase {
         sql(s"ALTER TABLE $t ADD COLUMN c string AFTER non_exist"))
       checkError(
         exception = e1,
-        errorClass = "FIELD_NOT_FOUND",
-        parameters = Map("fieldName" -> "`non_exist`", "fields" -> "a, point, b")
+        errorClass = "COLUMN_OR_FIELD_NOT_FOUND",
+        parameters = Map(
+          "name" -> "`non_exist`",
+          "tableName" -> toSQLId(tableName),
+          "list" -> "`a`, `point`, `b`")
       )
 
       sql(s"ALTER TABLE $t ADD COLUMN point.y int FIRST")
@@ -187,8 +190,11 @@ trait AlterTableTests extends SharedSparkSession with QueryErrorsBase {
         sql(s"ALTER TABLE $t ADD COLUMN point.x2 int AFTER non_exist"))
       checkError(
         exception = e2,
-        errorClass = "FIELD_NOT_FOUND",
-        parameters = Map("fieldName" -> "`non_exist`", "fields" -> "y, x, z")
+        errorClass = "COLUMN_OR_FIELD_NOT_FOUND",
+        parameters = Map(
+          "name" -> "`non_exist`",
+          "tableName" -> toSQLId(tableName),
+          "list" -> "`y`, `x`, `z`")
       )
     }
   }
@@ -228,8 +234,11 @@ trait AlterTableTests extends SharedSparkSession with QueryErrorsBase {
         sql(s"ALTER TABLE $t ADD COLUMNS (yy int AFTER xx, xx int)"))
       checkError(
         exception = e,
-        errorClass = "FIELD_NOT_FOUND",
-        parameters = Map("fieldName" -> "`xx`", "fields" -> "a, x, y, z, b, point")
+        errorClass = "COLUMN_OR_FIELD_NOT_FOUND",
+        parameters = Map(
+          "name" -> "`xx`",
+          "tableName" -> toSQLId(tableName),
+          "list" -> "`a`, `x`, `y`, `z`, `b`, `point`")
       )
     }
   }

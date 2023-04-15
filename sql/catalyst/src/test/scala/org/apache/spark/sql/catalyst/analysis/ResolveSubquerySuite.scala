@@ -180,7 +180,7 @@ class ResolveSubquerySuite extends AnalysisTest {
     // Analyzer will try to resolve struct first before subquery alias.
     assertAnalysisErrorClass(
       lateralJoin(t1.as("x"), t4.select($"x.a", $"x.b")),
-      "FIELD_NOT_FOUND",
+      "STRUCT_FIELD_NOT_FOUND",
       Map("fieldName" -> "`b`", "fields" -> "`a`"))
   }
 

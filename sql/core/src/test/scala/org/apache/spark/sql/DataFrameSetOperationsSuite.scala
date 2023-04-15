@@ -1003,7 +1003,7 @@ class DataFrameSetOperationsSuite extends QueryTest with SharedSparkSession {
       exception = intercept[AnalysisException] {
         df1.unionByName(df2)
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`c`", "fields" -> "`a`, `b`"))
 
     // If right side of the nested struct has extra col.

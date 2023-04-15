@@ -3046,7 +3046,7 @@ class SQLQuerySuite extends QueryTest with SharedSparkSession with AdaptiveSpark
             checkAnswer(sql("select s.I from t group by s.i"), Nil)
           }
         },
-        errorClass = "FIELD_NOT_FOUND",
+        errorClass = "STRUCT_FIELD_NOT_FOUND",
         parameters = Map("fieldName" -> "`I`", "fields" -> "`i`"),
         context = ExpectedContext(
           fragment = "s.I",

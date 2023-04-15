@@ -1060,14 +1060,14 @@ class ColumnExpressionSuite extends QueryTest with SharedSparkSession {
       exception = intercept[AnalysisException] {
         structLevel2.withColumn("a", $"a".withField("x.b", lit(2)))
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`x`", "fields" -> "`a`"))
 
     checkError(
       exception = intercept[AnalysisException] {
         structLevel3.withColumn("a", $"a".withField("a.x.b", lit(2)))
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`x`", "fields" -> "`a`"))
   }
 
@@ -1502,7 +1502,7 @@ class ColumnExpressionSuite extends QueryTest with SharedSparkSession {
       exception = intercept[AnalysisException] {
         df.withColumn("a", $"a".withField("a.b.e.f", lit(2)))
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`a`", "fields" -> "`a`.`b`"))
   }
 
@@ -1614,14 +1614,14 @@ class ColumnExpressionSuite extends QueryTest with SharedSparkSession {
         exception = intercept[AnalysisException] {
           mixedCaseStructLevel2.withColumn("a", $"a".withField("A.a", lit(2)))
         },
-        errorClass = "FIELD_NOT_FOUND",
+        errorClass = "STRUCT_FIELD_NOT_FOUND",
         parameters = Map("fieldName" -> "`A`", "fields" -> "`a`, `B`"))
 
       checkError(
         exception = intercept[AnalysisException] {
           mixedCaseStructLevel2.withColumn("a", $"a".withField("b.a", lit(2)))
         },
-        errorClass = "FIELD_NOT_FOUND",
+        errorClass = "STRUCT_FIELD_NOT_FOUND",
         parameters = Map("fieldName" -> "`b`", "fields" -> "`a`, `B`"))
     }
   }
@@ -1845,14 +1845,14 @@ class ColumnExpressionSuite extends QueryTest with SharedSparkSession {
       exception = intercept[AnalysisException] {
         structLevel2.withColumn("a", $"a".dropFields("x.b"))
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`x`", "fields" -> "`a`"))
 
     checkError(
       exception = intercept[AnalysisException] {
         structLevel3.withColumn("a", $"a".dropFields("a.x.b"))
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`x`", "fields" -> "`a`"))
   }
 
@@ -2119,14 +2119,14 @@ class ColumnExpressionSuite extends QueryTest with SharedSparkSession {
         exception = intercept[AnalysisException] {
           mixedCaseStructLevel2.withColumn("a", $"a".dropFields("A.a"))
         },
-        errorClass = "FIELD_NOT_FOUND",
+        errorClass = "STRUCT_FIELD_NOT_FOUND",
         parameters = Map("fieldName" -> "`A`", "fields" -> "`a`, `B`"))
 
       checkError(
         exception = intercept[AnalysisException] {
           mixedCaseStructLevel2.withColumn("a", $"a".dropFields("b.a"))
         },
-        errorClass = "FIELD_NOT_FOUND",
+        errorClass = "STRUCT_FIELD_NOT_FOUND",
         parameters = Map("fieldName" -> "`b`", "fields" -> "`a`, `B`"))
     }
   }
@@ -2378,7 +2378,7 @@ class ColumnExpressionSuite extends QueryTest with SharedSparkSession {
       exception = intercept[AnalysisException] {
         structLevel1.select($"a".withField("d", lit(4)).withField("e", $"a.d" + 1).as("a"))
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`d`", "fields" -> "`a`, `b`, `c`"))
 
     checkAnswer(
@@ -2431,7 +2431,7 @@ class ColumnExpressionSuite extends QueryTest with SharedSparkSession {
           .select($"a".dropFields("c").as("a"))
           .select($"a".withField("z", $"a.c")).as("a")
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`c`", "fields" -> "`a`, `b`"))
   }
 

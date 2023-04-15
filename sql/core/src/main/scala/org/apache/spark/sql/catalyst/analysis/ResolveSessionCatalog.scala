@@ -143,12 +143,13 @@ class ResolveSessionCatalog(val catalogManager: CatalogManager)
       // `ResolvedView` stores only the identifier.
       DescribeColumnCommand(ident, column.nameParts, isExtended, output)
 
-    case DescribeColumn(ResolvedV1TableIdentifier(ident), column, isExtended, output) =>
+    case DescribeColumn(ResolvedV1CatalogTable(catalogTable), column, isExtended, output) =>
       column match {
         case u: UnresolvedAttribute =>
-          throw QueryCompilationErrors.columnNotFoundError(u.name)
+          throw QueryCompilationErrors.columnOrFieldNotFoundError(
+            u.name, catalogTable.schema.fieldNames, catalogTable.identifier.unquotedString)
         case a: Attribute =>
-          DescribeColumnCommand(ident, a.qualifier :+ a.name, isExtended, output)
+          DescribeColumnCommand(catalogTable.identifier, a.qualifier :+ a.name, isExtended, output)
         case Alias(child, _) =>
           throw QueryCompilationErrors.commandNotSupportNestedColumnError(
             "DESC TABLE COLUMN", toPrettySQL(child))
@@ -565,6 +566,14 @@ class ResolveSessionCatalog(val catalogManager: CatalogManager)
     def unapply(resolved: LogicalPlan): Option[TableIdentifier] = resolved match {
       case ResolvedTable(catalog, _, t: V1Table, _) if isSessionCatalog(catalog) =>
         Some(t.catalogTable.identifier)
+      case _ => None
+    }
+  }
+
+  object ResolvedV1CatalogTable {
+    def unapply(resolved: LogicalPlan): Option[CatalogTable] = resolved match {
+      case ResolvedTable(catalog, _, t: V1Table, _) if isSessionCatalog(catalog) =>
+        Some(t.catalogTable)
       case _ => None
     }
   }

@@ -393,7 +393,7 @@ class AnalysisErrorSuite extends AnalysisTest {
   errorClassTest(
     "missing field",
     nestedRelation2.select($"top.c"),
-    "FIELD_NOT_FOUND",
+    "STRUCT_FIELD_NOT_FOUND",
     Map("fieldName" -> "`c`", "fields" -> "`aField`, `bField`, `cField`"),
     caseSensitive = false)
 

@@ -337,7 +337,7 @@ abstract class SQLViewTestSuite extends QueryTest with SQLTestUtils {
         sql("CREATE TABLE t(s STRUCT<j: INT>) USING json")
         checkError(
           exception = intercept[AnalysisException](spark.table(viewName)),
-          errorClass = "FIELD_NOT_FOUND",
+          errorClass = "STRUCT_FIELD_NOT_FOUND",
           parameters = Map("fieldName" -> "`i`", "fields" -> "`j`"),
           context = ExpectedContext(
             fragment = "s.i",

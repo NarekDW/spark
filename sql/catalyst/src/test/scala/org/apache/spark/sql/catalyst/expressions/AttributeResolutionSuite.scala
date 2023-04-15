@@ -108,7 +108,7 @@ class AttributeResolutionSuite extends SparkFunSuite {
       exception = intercept[AnalysisException] {
         attrs.resolve(Seq("ns1", "t", "a", "cc"), resolver)
       },
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       parameters = Map("fieldName" -> "`cc`", "fields" -> "`aa`, `bb`"))
   }
 

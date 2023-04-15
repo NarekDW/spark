@@ -292,13 +292,16 @@ private[sql] object QueryCompilationErrors extends QueryErrorsBase {
       messageParameters = Map("className" -> className))
   }
 
-  def referenceColNotFoundForAlterTableChangesError(
-      fieldName: String, fields: Array[String]): Throwable = {
+  def columnOrFieldNotFoundError(
+      fieldName: String, fields: Array[String], tableName: String): Throwable = {
     new AnalysisException(
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "COLUMN_OR_FIELD_NOT_FOUND",
       messageParameters = Map(
-        "fieldName" -> toSQLId(fieldName),
-        "fields" -> fields.mkString(", ")))
+        "name" -> toSQLId(fieldName),
+        "tableName" -> toSQLId(tableName),
+        "list" -> fields.map(toSQLId).mkString(", ")
+      )
+    )
   }
 
   def windowSpecificationNotDefinedError(windowName: String): Throwable = {
@@ -2121,7 +2124,7 @@ private[sql] object QueryCompilationErrors extends QueryErrorsBase {
   def noSuchStructFieldInGivenFieldsError(
       fieldName: String, fields: Array[StructField]): Throwable = {
     new AnalysisException(
-      errorClass = "FIELD_NOT_FOUND",
+      errorClass = "STRUCT_FIELD_NOT_FOUND",
       messageParameters = Map(
         "fieldName" -> toSQLId(fieldName),
         "fields" -> fields.map(f => toSQLId(f.name)).mkString(", ")))
@@ -2310,14 +2313,6 @@ private[sql] object QueryCompilationErrors extends QueryErrorsBase {
     new AnalysisException(
       errorClass = "COLUMN_ALREADY_EXISTS",
       messageParameters = Map("columnName" -> toSQLId(columnName)))
-  }
-
-  def columnNotFoundError(colName: String): Throwable = {
-    new AnalysisException(
-      errorClass = "COLUMN_NOT_FOUND",
-      messageParameters = Map(
-        "colName" -> toSQLId(colName),
-        "caseSensitiveConfig" -> toSQLConf(SQLConf.CASE_SENSITIVE.key)))
   }
 
   def noSuchTableError(db: String, table: String): Throwable = {
