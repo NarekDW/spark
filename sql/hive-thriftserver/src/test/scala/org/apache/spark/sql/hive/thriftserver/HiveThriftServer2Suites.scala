@@ -840,7 +840,7 @@ class HiveThriftBinaryServerSuite extends HiveThriftServer2Test {
     withCLIServiceClient { client =>
       val user = System.getProperty("user.name")
       val sessionHandle = client.openSession(user, "")
-      withJdbcStatement("smallKV", "addJar") { statement =>
+      withJdbcStatement("smallKV", "addJar") { _ =>
         val confOverlay = new java.util.HashMap[java.lang.String, java.lang.String]
         val jarFile = HiveTestJars.getHiveHcatalogCoreJar().getCanonicalPath
 
@@ -1206,7 +1206,7 @@ abstract class HiveThriftServer2TestBase extends SparkFunSuite with BeforeAndAft
   protected var operationLogPath: File = _
   protected var lScratchDir: File = _
   private var logTailingProcess: Process = _
-  private var diagnosisBuffer: ArrayBuffer[String] = ArrayBuffer.empty[String]
+  private val diagnosisBuffer: ArrayBuffer[String] = ArrayBuffer.empty[String]
 
   protected def extraConf: Seq[String] = Nil
 
@@ -1431,7 +1431,7 @@ abstract class HiveThriftServer2TestBase extends SparkFunSuite with BeforeAndAft
   protected def jdbcUri(database: String = "default"): String = if (mode == ServerMode.http) {
     s"""jdbc:hive2://$localhost:$serverPort/
        |$database?
-       |hive.server2.transport.mode=http;
+       |transportMode=http;
        |hive.server2.thrift.http.path=cliservice;
        |${hiveConfList}#${hiveVarList}
      """.stripMargin.split("\n").mkString.trim
